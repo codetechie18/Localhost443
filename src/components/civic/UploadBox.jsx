@@ -1,10 +1,17 @@
-import { useState, useRef } from 'react';
-import { Upload, X, Image } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Upload, X } from 'lucide-react';
 
-export default function UploadBox({ onFileSelect }) {
+export default function UploadBox({ onFileSelect, resetKey = 0 }) {
   const [preview, setPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    setPreview(null);
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
+  }, [resetKey]);
 
   const handleFile = (file) => {
     if (!file) return;
@@ -22,6 +29,9 @@ export default function UploadBox({ onFileSelect }) {
 
   const clear = () => {
     setPreview(null);
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
     onFileSelect?.(null);
   };
 
