@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Sidebar from '../components/civic/Sidebar';
 import Navbar from '../components/civic/Navbar';
 import KPIBox from '../components/civic/KPIBox';
@@ -5,6 +6,7 @@ import { TrendChart } from '../components/civic/ChartPanel';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { hasReportDraftContent, readReportDraft } from '../utils/reportDraft';
 import {
   CheckCircle,
   Clock,
@@ -12,6 +14,7 @@ import {
   Loader,
   MapPin,
   PlusCircle,
+  Save,
 } from 'lucide-react';
 
 const formatDateKey = (value) => {
@@ -29,6 +32,14 @@ const formatShortDate = (value) =>
     year: 'numeric',
   }).format(new Date(value));
 
+const formatDraftTime = (value) =>
+  new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(value));
+
 const getTrend = (current, previous) => {
   if (current === 0 && previous === 0) return undefined;
   if (previous === 0) return 100;
@@ -39,7 +50,24 @@ export default function CitizenDashboard() {
   const { complaints } = useApp();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [reportDraft, setReportDraft] = useState(() => readReportDraft());
 
+  useEffect(() => {
+    const syncDraft = () => {
+      setReportDraft(readReportDraft());
+    };
+
+    syncDraft();
+    window.addEventListener('focus', syncDraft);
+    window.addEventListener('storage', syncDraft);
+
+    return () => {
+      window.removeEventListener('focus', syncDraft);
+      window.removeEventListener('storage', syncDraft);
+    };
+  }, []);
+
+  const hasDraft = reportDraft && hasReportDraftContent(reportDraft);
   const citizenComplaints = complaints.filter((complaint) => complaint.userId === user?.id);
   const sortedComplaints = [...citizenComplaints].sort(
     (left, right) => new Date(right.date) - new Date(left.date)
@@ -190,6 +218,24 @@ export default function CitizenDashboard() {
 
             <div className="bg-card rounded-lg card-shadow p-5 space-y-4 animate-fade-in">
               <h3 className="font-semibold text-sm text-foreground">Quick Actions</h3>
+
+              {hasDraft && (
+                <button
+                  onClick={() => navigate('/report')}
+                  className="w-full flex items-center gap-3 p-4 rounded-2xl border border-primary/20 bg-primary/5 hover:card-shadow-hover transition-all hover:border-primary/40"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Save className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-foreground">Resume Draft</p>
+                    <p className="text-xs text-muted-foreground">
+                      Saved {reportDraft?.updatedAt ? formatDraftTime(reportDraft.updatedAt) : 'recently'}
+                    </p>
+                  </div>
+                </button>
+              )}
+
               <div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Live Summary</p>
                 <p className="mt-2 text-sm text-foreground">
@@ -203,6 +249,7 @@ export default function CitizenDashboard() {
                     : 'New reports will appear here as soon as you submit them.'}
                 </p>
               </div>
+
               <button
                 onClick={() => navigate('/report')}
                 className="w-full flex items-center gap-3 p-4 rounded-2xl border border-border hover:card-shadow-hover transition-all hover:border-primary/30"
@@ -215,6 +262,7 @@ export default function CitizenDashboard() {
                   <p className="text-xs text-muted-foreground">Submit a new civic complaint</p>
                 </div>
               </button>
+
               <button
                 onClick={() => navigate('/map')}
                 className="w-full flex items-center gap-3 p-4 rounded-2xl border border-border hover:card-shadow-hover transition-all hover:border-secondary/30"
