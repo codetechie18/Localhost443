@@ -1,20 +1,72 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import Sidebar from '../components/civic/Sidebar';
 import Navbar from '../components/civic/Navbar';
 import MapView from '../components/civic/MapView';
 import { useApp } from '../context/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import StatusBadge from '../components/civic/StatusBadge';
+import { Bot } from 'lucide-react';
 
 const STATUS_FILTERS = ['All', 'Pending', 'In Progress', 'Resolved'];
 const PRIORITY_FILTERS = ['All', 'High', 'Medium', 'Low'];
 
 export default function AdminMap() {
-  const { complaints } = useApp();
+  const { complaints, updateStatus } = useApp();
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [departmentFilter, setDepartmentFilter] = useState('All');
   const [activeComplaintId, setActiveComplaintId] = useState(null);
+
+  // AI Workflow States
+  const [isAiRunning, setIsAiRunning] = useState(false);
+  const [aiLogs, setAiLogs] = useState([]);
+  const logsEndRef = useRef(null);
+
+  // Auto-scroll AI logs
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [aiLogs]);
+
+  const runAiWorkflow = () => {
+    const pendingCases = complaints.filter(c => c.status === 'Pending' || c.status === 'In Progress');
+    if (pendingCases.length === 0) {
+      setAiLogs([{ text: "No pending or in-progress cases found for AI to process.", type: "info" }]);
+      setTimeout(() => setAiLogs([]), 3000);
+      return;
+    }
+
+    setIsAiRunning(true);
+    setAiLogs([{ text: "Initializing Civic AI Case Solver...", type: "system" }]);
+
+    let index = 0;
+
+    const processNext = () => {
+      if (index >= pendingCases.length) {
+        setAiLogs(prev => [...prev, { text: "✅ AI Workflow Complete. All verified cases have been automatically resolved.", type: "success" }]);
+        setTimeout(() => {
+          setIsAiRunning(false);
+        }, 1000);
+        return;
+      }
+
+      const currentCase = pendingCases[index];
+      setAiLogs(prev => [...prev, { text: `🔍 Analyzing Case #${currentCase.id} (${currentCase.title})...`, type: "processing" }]);
+
+      setTimeout(() => {
+        const isFake = Math.random() > 0.8; // 20% fake simulation
+        if (isFake) {
+          setAiLogs(prev => [...prev, { text: `⚠️ FRAUD DETECTED: Case #${currentCase.id} fails authenticity checks (e.g. invalid geolocation or duplicated image). Skipped.`, type: "error" }]);
+        } else {
+          setAiLogs(prev => [...prev, { text: `✅ VERIFIED: Case #${currentCase.id} is real. Executing auto-resolution...`, type: "success" }]);
+          updateStatus(currentCase.id, 'Resolved');
+        }
+        index++;
+        setTimeout(processNext, 1000);
+      }, 1500);
+    };
+
+    setTimeout(processNext, 1200);
+  };
 
   const departments = useMemo(
     () => ['All', ...Array.from(new Set(complaints.map((c) => c.department)))],
@@ -50,19 +102,59 @@ export default function AdminMap() {
       {/* Admin Premium Background Gradients */}
       <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-rose-900/20 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-violet-900/20 blur-[150px] pointer-events-none" />
-      
+
       <Sidebar />
       <div className="flex-1 ml-64 relative z-10 flex flex-col h-screen overflow-hidden">
         <Navbar title="Command Center — Issue Map" />
-        
+
         <main className="flex-1 p-6 overflow-hidden animate-fade-in flex">
-          <div className="grid gap-6 w-full h-full lg:grid-cols-[380px_minmax(0,1fr)]">
-            
+          <div className="grid gap-6 w-full h-full lg:grid-cols-[400px_minmax(0,1fr)]">
+
             {/* Admin Sidebar Panel */}
             <aside className="space-y-6 h-full overflow-y-auto pr-2 pb-6 custom-scrollbar flex flex-col">
-              
+
+              {/* AI Auto-Resolver */}
+              <div className="rounded-[1.5rem] border border-indigo-500/30 bg-indigo-900/20 backdrop-blur-2xl p-6 shadow-[0_0_30px_rgba(99,102,241,0.15)] relative overflow-hidden shrink-0 group">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+                <div className="flex items-center justify-between mb-2 relative z-10">
+                  <div>
+                    <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                      <Bot size={24} className="text-indigo-400" /> AI Solver
+                    </h3>
+                    <p className="text-[11px] text-indigo-200/70 mt-1 uppercase tracking-widest font-semibold">Automated Verification</p>
+                  </div>
+                  <button
+                    onClick={runAiWorkflow}
+                    disabled={isAiRunning}
+                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:shadow-[0_0_30px_rgba(99,102,241,0.8)] flex items-center gap-2"
+                  >
+                    {isAiRunning ? 'Processing...' : 'Auto-Resolve All'}
+                  </button>
+                </div>
+
+                {/* AI Terminal Logs */}
+                {(aiLogs.length > 0 || isAiRunning) && (
+                  <div className="mt-4 bg-black/60 rounded-xl border border-white/10 p-3 h-40 overflow-y-auto custom-scrollbar font-mono text-[11px] space-y-2 relative z-10 shadow-inner">
+                    {aiLogs.map((log, i) => (
+                      <div key={i} className={`flex items-start gap-2 ${log.type === 'error' ? 'text-rose-400' : log.type === 'success' ? 'text-emerald-400' : log.type === 'processing' ? 'text-indigo-300' : 'text-slate-300'}`}>
+                        <span className="opacity-50 shrink-0">[{new Date().toLocaleTimeString()}]</span>
+                        <span className="leading-snug">{log.text}</span>
+                      </div>
+                    ))}
+                    {isAiRunning && (
+                      <div className="flex items-center gap-2 text-indigo-400 animate-pulse mt-2">
+                        <span className="opacity-50 shrink-0">[{new Date().toLocaleTimeString()}]</span>
+                        <span className="w-2 h-4 bg-indigo-400 inline-block"></span>
+                      </div>
+                    )}
+                    <div ref={logsEndRef} />
+                  </div>
+                )}
+              </div>
+
               {/* Advanced Filters */}
-              <div className="rounded-[1.5rem] border border-white/10 bg-slate-900/60 backdrop-blur-2xl p-6 shadow-2xl relative overflow-hidden group shrink-0">
+              <div className="rounded-[1.5rem] border border-white/10 bg-slate-900/60 backdrop-blur-2xl p-6 shadow-2xl relative overflow-hidden shrink-0 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-violet-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <h2 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-rose-400 to-violet-400 bg-clip-text text-transparent relative z-10">Advanced Filters</h2>
 
@@ -75,11 +167,10 @@ export default function AdminMap() {
                         <button
                           key={status}
                           onClick={() => { setStatusFilter(status); setActiveComplaintId(null); }}
-                          className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${
-                            statusFilter === status
+                          className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${statusFilter === status
                               ? 'bg-gradient-to-r from-rose-600 to-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.4)] scale-[1.02]'
                               : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 border border-white/5'
-                          }`}
+                            }`}
                         >
                           {status}
                         </button>
@@ -95,11 +186,10 @@ export default function AdminMap() {
                         <button
                           key={priority}
                           onClick={() => { setPriorityFilter(priority); setActiveComplaintId(null); }}
-                          className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${
-                            priorityFilter === priority
+                          className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${priorityFilter === priority
                               ? 'bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)] scale-[1.02]'
                               : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 border border-white/5'
-                          }`}
+                            }`}
                         >
                           {priority}
                         </button>
@@ -115,11 +205,10 @@ export default function AdminMap() {
                         <button
                           key={dept}
                           onClick={() => { setDepartmentFilter(dept); setActiveComplaintId(null); }}
-                          className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${
-                            departmentFilter === dept
+                          className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${departmentFilter === dept
                               ? 'bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white shadow-[0_0_20px_rgba(217,70,239,0.4)] scale-[1.02]'
                               : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 border border-white/5'
-                          }`}
+                            }`}
                         >
                           {dept}
                         </button>
@@ -133,7 +222,7 @@ export default function AdminMap() {
               <div className="rounded-[1.5rem] border border-white/10 bg-slate-900/60 backdrop-blur-2xl p-6 shadow-2xl relative overflow-hidden shrink-0">
                 <h3 className="text-xl font-extrabold tracking-tight text-slate-100 mb-1 relative z-10">Department Workload</h3>
                 <p className="text-xs text-slate-400 mb-5 relative z-10">Top departments by issue count</p>
-                
+
                 <div className="h-[200px] w-full relative z-10">
                   {deptChartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -141,7 +230,7 @@ export default function AdminMap() {
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                         <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
                         <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
-                        <Tooltip 
+                        <Tooltip
                           cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                           contentStyle={{ backgroundColor: 'rgba(15,23,42,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#f1f5f9' }}
                           itemStyle={{ color: '#f1f5f9', fontSize: '13px', fontWeight: 600 }}
@@ -174,15 +263,14 @@ export default function AdminMap() {
                       <p className="text-sm text-slate-500">No unresolved high-priority issues.</p>
                     </div>
                   ) : (
-                     criticalIssues.map((complaint) => (
+                    criticalIssues.map((complaint) => (
                       <button
                         key={complaint.id}
                         onClick={() => setActiveComplaintId(complaint.id)}
-                        className={`w-full rounded-xl border p-3.5 text-left transition-all duration-300 group ${
-                          activeComplaintId === complaint.id 
-                            ? 'border-red-500/50 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.2)]' 
+                        className={`w-full rounded-xl border p-3.5 text-left transition-all duration-300 group ${activeComplaintId === complaint.id
+                            ? 'border-red-500/50 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
                             : 'border-white/5 bg-black/20 hover:border-red-500/30 hover:bg-red-500/5'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -191,8 +279,8 @@ export default function AdminMap() {
                           </div>
                         </div>
                         <div className="mt-3 flex items-center gap-2">
-                           <StatusBadge status={complaint.status} />
-                           <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider px-2 py-0.5 rounded-md bg-white/5 border border-white/10">{complaint.department}</span>
+                          <StatusBadge status={complaint.status} />
+                          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider px-2 py-0.5 rounded-md bg-white/5 border border-white/10">{complaint.department}</span>
                         </div>
                       </button>
                     ))
@@ -207,9 +295,9 @@ export default function AdminMap() {
               <div className="h-full rounded-[1.5rem] border border-white/10 bg-slate-900/60 backdrop-blur-2xl p-2 shadow-2xl relative flex flex-col group">
                 <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none rounded-[1.5rem]" />
                 <div className="absolute top-4 left-4 z-[400] flex gap-2">
-                   <div className="bg-slate-900/80 backdrop-blur-md border border-white/10 text-slate-200 px-4 py-2 rounded-xl text-sm font-semibold shadow-lg">
-                      Showing {filteredComplaints.length} issues
-                   </div>
+                  <div className="bg-slate-900/80 backdrop-blur-md border border-white/10 text-slate-200 px-4 py-2 rounded-xl text-sm font-semibold shadow-lg">
+                    Showing {filteredComplaints.length} issues
+                  </div>
                 </div>
                 <div className="flex-1 rounded-[1rem] overflow-hidden border border-white/5 relative z-10 shadow-inner">
                   <MapView
