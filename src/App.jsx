@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminComplaints from "./pages/AdminComplaints";
 import AdminMap from "./pages/AdminMap";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import Chatbot from "./components/civic/Chatbot";
 // import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,25 +35,31 @@ function AppRoutes() {
 
   if (user.role === 'admin') {
     return (
-      <Routes>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/complaints" element={<AdminComplaints />} />
-        <Route path="/admin/map" element={<AdminMap />} />
-        <Route path="/admin/analytics" element={<AdminAnalytics />} />
-        <Route path="*" element={<Navigate to="/admin" replace />} />
-      </Routes>
+      <>
+        <Routes>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/complaints" element={<AdminComplaints />} />
+          <Route path="/admin/map" element={<AdminMap />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Routes>
+        <Chatbot />
+      </>
     );
   }
 
   return (
-    <Routes>
-      <Route path="/dashboard" element={<CitizenDashboard />} />
-      <Route path="/report" element={<ReportIssue />} />
-      <Route path="/complaints" element={<MyComplaints />} />
-      <Route path="/map" element={<MapPage />} />
-      <Route path="/notifications" element={<Notifications />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/dashboard" element={<CitizenDashboard />} />
+        <Route path="/report" element={<ReportIssue />} />
+        <Route path="/complaints" element={<MyComplaints />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+      <Chatbot />
+    </>
   );
 }
 
