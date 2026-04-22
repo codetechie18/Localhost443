@@ -4,8 +4,16 @@ import Navbar from '../components/civic/Navbar';
 import MapView from '../components/civic/MapView';
 import { useApp } from '../context/AppContext';
 import StatusBadge from '../components/civic/StatusBadge';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const STATUS_FILTERS = ['All', 'Pending', 'In Progress', 'Resolved'];
+
+// Chart Colors matching the application's premium dark theme
+const COLORS = {
+  Pending: '#f87171', // red-400
+  'In Progress': '#facc15', // yellow-400
+  Resolved: '#34d399', // emerald-400
+};
 
 export default function MapPage() {
   const { complaints } = useApp();
@@ -35,12 +43,16 @@ export default function MapPage() {
     });
   }, [complaints, statusFilter, categoryFilter, query]);
 
-  const summary = useMemo(() => {
+  const chartData = useMemo(() => {
     const counts = { Pending: 0, 'In Progress': 0, Resolved: 0 };
     filteredComplaints.forEach((complaint) => {
       counts[complaint.status] += 1;
     });
-    return counts;
+    return [
+      { name: 'Pending', value: counts.Pending },
+      { name: 'In Progress', value: counts['In Progress'] },
+      { name: 'Resolved', value: counts.Resolved },
+    ].filter(item => item.value > 0);
   }, [filteredComplaints]);
 
   const recentlyUpdated = useMemo(
@@ -49,31 +61,38 @@ export default function MapPage() {
   );
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-slate-950 relative overflow-hidden">
+      {/* Premium Background Gradients */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-900/20 blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-900/20 blur-[140px] pointer-events-none" />
+      
       <Sidebar />
-      <div className="flex-1 ml-64">
-        <Navbar title="Map View" />
-        <main className="p-6 space-y-6">
-          <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-            <aside className="space-y-6">
-              <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-                <h2 className="text-lg font-semibold">Map Controls</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Filter complaints, search addresses, and focus individual issues.</p>
+      <div className="flex-1 ml-64 relative z-10 flex flex-col h-screen overflow-hidden">
+        <Navbar title="Interactive Map Dashboard" />
+        <main className="flex-1 p-6 overflow-hidden animate-fade-in flex">
+          <div className="grid gap-6 w-full h-full lg:grid-cols-[360px_minmax(0,1fr)]">
+            
+            {/* Left Sidebar for Controls & Analytics */}
+            <aside className="space-y-6 h-full overflow-y-auto pr-2 pb-6 custom-scrollbar flex flex-col">
+              
+              {/* Map Controls */}
+              <div className="rounded-[1.5rem] border border-white/10 bg-slate-900/60 backdrop-blur-2xl p-6 shadow-2xl relative overflow-hidden group shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <h2 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent relative z-10">Filters & Search</h2>
 
-                <div className="mt-6 space-y-4">
+                <div className="mt-5 space-y-5 relative z-10">
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Search</label>
                     <input
                       value={query}
                       onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Search by title, location, or description"
-                      className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      placeholder="Search location, title..."
+                      className="w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-slate-200 outline-none transition-all focus:border-indigo-500/50 focus:bg-black/80 focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-500 shadow-inner"
                     />
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Status</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-3">Status</p>
+                    <div className="flex flex-wrap gap-2">
                       {STATUS_FILTERS.map((status) => (
                         <button
                           key={status}
@@ -82,10 +101,10 @@ export default function MapPage() {
                             setStatusFilter(status);
                             setActiveComplaintId(null);
                           }}
-                          className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                          className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-300 ${
                             statusFilter === status
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-background text-muted-foreground hover:bg-muted'
+                              ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] scale-[1.02]'
+                              : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 border border-white/5'
                           }`}
                         >
                           {status}
@@ -95,8 +114,8 @@ export default function MapPage() {
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Category</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-3">Category</p>
+                    <div className="flex flex-wrap gap-2">
                       {categories.map((category) => (
                         <button
                           key={category}
@@ -105,10 +124,10 @@ export default function MapPage() {
                             setCategoryFilter(category);
                             setActiveComplaintId(null);
                           }}
-                          className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                          className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-300 ${
                             categoryFilter === category
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-background text-muted-foreground hover:bg-muted'
+                              ? 'bg-gradient-to-r from-cyan-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)] scale-[1.02]'
+                              : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 border border-white/5'
                           }`}
                         >
                           {category}
@@ -119,57 +138,79 @@ export default function MapPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="text-lg font-semibold">Current View</h3>
-                <div className="mt-5 grid gap-3">
-                  <div className="rounded-3xl border border-white/10 bg-background/80 p-4">
-                    <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Visible complaints</p>
-                    <p className="mt-2 text-3xl font-semibold">{filteredComplaints.length}</p>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-3xl border border-white/10 bg-background/80 p-4 text-center">
-                      <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Pending</p>
-                      <p className="mt-2 text-xl font-semibold text-pending">{summary.Pending}</p>
+              {/* Dynamic Chart */}
+              <div className="rounded-[1.5rem] border border-white/10 bg-slate-900/60 backdrop-blur-2xl p-6 shadow-2xl relative overflow-hidden shrink-0">
+                <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-indigo-500/20 rounded-full blur-[40px] pointer-events-none" />
+                <h3 className="text-xl font-extrabold tracking-tight text-slate-100 mb-1 relative z-10">Analytics</h3>
+                <p className="text-xs text-slate-400 mb-4 relative z-10">Real-time status breakdown</p>
+                
+                <div className="h-[220px] w-full relative z-10">
+                  {chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={75}
+                          paddingAngle={6}
+                          dataKey="value"
+                          stroke="none"
+                          cornerRadius={6}
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[entry.name]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: 'rgba(15,23,42,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#f1f5f9', boxShadow: '0 10px 30px rgba(0,0,0,0.6)' }}
+                          itemStyle={{ color: '#f1f5f9', fontSize: '13px', fontWeight: 600 }}
+                        />
+                        <Legend verticalAlign="bottom" height={24} iconType="circle" wrapperStyle={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}/>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <p className="text-slate-500 text-sm">No active issues found.</p>
                     </div>
-                    <div className="rounded-3xl border border-white/10 bg-background/80 p-4 text-center">
-                      <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">In Progress</p>
-                      <p className="mt-2 text-xl font-semibold text-in-progress">{summary['In Progress']}</p>
-                    </div>
-                    <div className="rounded-3xl border border-white/10 bg-background/80 p-4 text-center">
-                      <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Resolved</p>
-                      <p className="mt-2 text-xl font-semibold text-resolved">{summary.Resolved}</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-lg font-semibold">Recent Issues</h3>
-                  <span className="rounded-full bg-background px-3 py-1 text-xs text-muted-foreground">Top {recentlyUpdated.length}</span>
+              {/* Recent Issues */}
+              <div className="rounded-[1.5rem] border border-white/10 bg-slate-900/60 backdrop-blur-2xl p-6 shadow-2xl flex-1 flex flex-col min-h-[250px]">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-extrabold tracking-tight text-slate-100">Recent Issues</h3>
+                  <span className="rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 text-[10px] font-bold tracking-widest">TOP {recentlyUpdated.length}</span>
                 </div>
 
-                <div className="mt-4 space-y-3 max-h-[calc(100vh-380px)] overflow-auto pr-1">
+                <div className="space-y-3 flex-1 overflow-y-auto pr-1 custom-scrollbar">
                   {recentlyUpdated.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No complaints match your filters.</p>
+                    <div className="h-full flex items-center justify-center">
+                      <p className="text-sm text-slate-500">No issues match filters.</p>
+                    </div>
                   ) : (
                     recentlyUpdated.map((complaint) => (
                       <button
                         key={complaint.id}
                         type="button"
                         onClick={() => setActiveComplaintId(complaint.id)}
-                        className={`w-full rounded-3xl border p-4 text-left transition ${
-                          activeComplaintId === complaint.id ? 'border-primary bg-primary/5' : 'border-white/5 bg-background hover:border-border'
+                        className={`w-full rounded-xl border p-3.5 text-left transition-all duration-300 group ${
+                          activeComplaintId === complaint.id 
+                            ? 'border-indigo-500/50 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)]' 
+                            : 'border-white/5 bg-black/20 hover:border-white/20 hover:bg-white/5'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold text-foreground">{complaint.title}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">{complaint.location.address}</p>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm text-slate-200 truncate group-hover:text-indigo-300 transition-colors">{complaint.title}</p>
+                            <p className="mt-1 text-xs text-slate-500 truncate">{complaint.location.address}</p>
                           </div>
-                          <StatusBadge status={complaint.status} />
+                          <div className="shrink-0 scale-90 origin-top-right">
+                            <StatusBadge status={complaint.status} />
+                          </div>
                         </div>
-                        <p className="mt-3 text-sm text-muted-foreground">{complaint.category} · {complaint.priority} priority</p>
                       </button>
                     ))
                   )}
@@ -177,30 +218,24 @@ export default function MapPage() {
               </div>
             </aside>
 
-            <section className="space-y-4">
-              <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Map View</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Inspect complaints and click a card to focus the map.</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span className="rounded-full bg-background px-3 py-1">Status: {statusFilter}</span>
-                    <span className="rounded-full bg-background px-3 py-1">Category: {categoryFilter}</span>
-                    <span className="rounded-full bg-background px-3 py-1">Search: {query || 'none'}</span>
-                  </div>
+            {/* Main Map Area */}
+            <section className="h-full flex flex-col pb-6">
+              <div className="h-full rounded-[1.5rem] border border-white/10 bg-slate-900/60 backdrop-blur-2xl p-2 shadow-2xl relative flex flex-col group">
+                <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none rounded-[1.5rem]" />
+                <div className="flex-1 rounded-[1rem] overflow-hidden border border-white/5 relative z-10 shadow-inner">
+                  <MapView
+                    complaints={filteredComplaints}
+                    height="100%"
+                    activeComplaintId={activeComplaintId}
+                  />
                 </div>
               </div>
-
-              <MapView
-                complaints={filteredComplaints}
-                height="calc(100vh - 220px)"
-                activeComplaintId={activeComplaintId}
-              />
             </section>
+
           </div>
         </main>
       </div>
     </div>
   );
 }
+
