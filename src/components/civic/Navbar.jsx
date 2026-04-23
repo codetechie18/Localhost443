@@ -1,10 +1,12 @@
 import { useAuth } from '../../context/AuthContext';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, Sun, Moon } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function Navbar({ title }) {
   const { user } = useAuth();
   const { notifications } = useApp();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-30">
@@ -20,6 +22,17 @@ export default function Navbar({ title }) {
             className="pl-9 pr-4 py-2 text-sm rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 w-56"
           />
         </div>
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg bg-background border border-border hover:bg-muted transition-colors"
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+          ) : (
+            <Moon className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+          )}
+        </button>
         <div className="relative">
           <Bell className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
           {notifications.length > 0 && (

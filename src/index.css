@@ -5,6 +5,51 @@
 
 @layer base {
   :root {
+    /* Light Mode */
+    --background: 0 0% 98%;
+    --foreground: 217 17% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 217 17% 10%;
+
+    --primary: 205 78% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 188 63% 55%;
+    --secondary-foreground: 217 17% 10%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 173 76% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+
+    --pending: 24 95% 53%;
+    --in-progress: 42 100% 50%;
+    --resolved: 142 71% 45%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 205 78% 55%;
+
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 217 17% 10%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-primary: 205 78% 55%;
+
+    --radius: 1rem;
+
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-elevated: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark {
+    /* Dark Mode */
     --background: 217 17% 10%;
     --foreground: 210 17% 96%;
 
@@ -40,8 +85,6 @@
     --sidebar-border: 218 17% 18%;
     --sidebar-accent: 205 29% 22%;
     --sidebar-primary: 174 74% 83%;
-
-    --radius: 1rem;
 
     --shadow-card: 0 24px 60px rgba(0, 0, 0, 0.16);
     --shadow-elevated: 0 30px 90px rgba(0, 0, 0, 0.24);
