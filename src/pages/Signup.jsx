@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Shield, Mail, Lock, User, ChevronDown } from 'lucide-react';
+import { Shield, Mail, Lock, User, ChevronDown, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -10,6 +11,7 @@ export default function Signup() {
   const [role, setRole] = useState('citizen');
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -18,7 +20,20 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+      <div className="absolute top-6 right-6">
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg bg-card border border-border hover:bg-muted transition-colors"
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+          ) : (
+            <Moon className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+          )}
+        </button>
+      </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">

@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 // import { TooltipProvider } from "./components/ui/tooltip";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AppProvider } from "./context/AppContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import CitizenDashboard from "./pages/CitizenDashboard";
@@ -69,9 +70,11 @@ const App = () => (
       {/* <Sonner /> */}
       <AuthProvider>
         <AppProvider>
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
+          <ThemeProvider>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </ThemeProvider>
         </AppProvider>
       </AuthProvider>
     {/* </TooltipProvider> */}
