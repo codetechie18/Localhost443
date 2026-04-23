@@ -103,12 +103,18 @@
   body {
     min-height: 100vh;
     margin: 0;
-    background: radial-gradient(circle at top, rgba(56, 189, 248, 0.15), transparent 30%),
-      radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.12), transparent 25%),
+    background: radial-gradient(circle at top, rgba(56, 189, 248, 0.05), transparent 30%),
+      radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.04), transparent 25%),
       hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: 'Inter', system-ui, sans-serif;
     text-rendering: optimizeLegibility;
+  }
+
+  .dark body {
+    background: radial-gradient(circle at top, rgba(56, 189, 248, 0.15), transparent 30%),
+      radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.12), transparent 25%),
+      hsl(var(--background));
   }
 }
 

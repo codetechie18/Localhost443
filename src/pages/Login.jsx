@@ -34,10 +34,10 @@ export default function Login() {
         </button>
       </div>
       <div className="relative w-full max-w-6xl overflow-hidden rounded-[2rem] border border-border bg-card/90 shadow-2xl backdrop-blur-xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.16),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.14),transparent_18%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.06),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.06),transparent_18%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.16),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.14),transparent_18%)]" />
         <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <aside className="flex flex-col justify-center px-10 py-12 sm:px-12 lg:px-16">
-            <div className="inline-flex items-center gap-3 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 shadow-sm shadow-cyan-400/10">
+            <div className="inline-flex items-center gap-3 rounded-full border border-cyan-200 dark:border-cyan-400/20 bg-cyan-50 dark:bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200 shadow-sm shadow-cyan-400/10">
               <Shield className="w-4 h-4" /> Secure civic access
             </div>
 
@@ -48,11 +48,11 @@ export default function Login() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               <div className="rounded-3xl border border-border bg-muted/80 p-5 shadow-lg">
-                <p className="text-xs uppercase tracking-[0.28em] text-cyan-500 dark:text-cyan-300">Fast access</p>
+                <p className="text-xs uppercase tracking-[0.28em] text-cyan-600 dark:text-cyan-300">Fast access</p>
                 <p className="mt-3 text-sm text-muted-foreground">Choose your role and get instant access to the right workspace.</p>
               </div>
               <div className="rounded-3xl border border-border bg-muted/80 p-5 shadow-lg">
-                <p className="text-xs uppercase tracking-[0.28em] text-violet-500 dark:text-violet-300">Live insights</p>
+                <p className="text-xs uppercase tracking-[0.28em] text-violet-600 dark:text-violet-300">Live insights</p>
                 <p className="mt-3 text-sm text-muted-foreground">View map-based issue tracking, priority alerts, and status reports after signing in.</p>
               </div>
             </div>
