@@ -4,10 +4,10 @@ import {
 } from 'recharts';
 
 const COLORS = {
-  pending: '#e84118',
-  inProgress: '#fbc531',
-  resolved: '#44bd32',
-  primary: '#2f3640',
+  pending: 'hsl(var(--pending))',
+  inProgress: 'hsl(var(--in-progress))',
+  resolved: 'hsl(var(--resolved))',
+  primary: 'hsl(var(--primary))',
 };
 
 export function TrendChart({ data }) {
@@ -16,7 +16,7 @@ export function TrendChart({ data }) {
       <h3 className="font-semibold text-sm mb-4">Complaints vs Resolved</h3>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,9%,87%)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="day" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip />
@@ -65,7 +65,7 @@ export function PriorityBar({ complaints }) {
       <h3 className="font-semibold text-sm mb-4">Priority Distribution</h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,9%,87%)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="priority" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip />
@@ -86,7 +86,7 @@ export function MonthlyChart({ data }) {
       <h3 className="font-semibold text-sm mb-4">Monthly Complaint Tracker</h3>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,9%,87%)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip />
@@ -103,7 +103,7 @@ export function WorkloadChart({ data }) {
       <h3 className="font-semibold text-sm mb-4">Complaints Handled Per Day</h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,9%,87%)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="day" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip />
