@@ -123,6 +123,10 @@
     box-shadow: var(--shadow-card);
   }
 
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-slate-500;
+  }
+
   .card-shadow-hover {
     box-shadow: var(--shadow-elevated);
   }
@@ -181,4 +185,16 @@
   height: 100%;
   width: 100%;
   border-radius: var(--radius);
+}
+
+.route-path {
+  stroke-dasharray: 20, 20;
+  animation: march 1s linear infinite;
+  filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.8));
+}
+
+@keyframes march {
+  to {
+    stroke-dashoffset: -40;
+  }
 }

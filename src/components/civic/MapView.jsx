@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import StatusBadge from './StatusBadge';
@@ -39,6 +39,27 @@ function MapController({ highlightedComplaint }) {
 export default function MapView({ complaints, height = '400px', activeComplaintId, optimizedRoute }) {
   const activeComplaint = complaints.find((complaint) => complaint.id === activeComplaintId);
   const { theme } = useTheme();
+  const [renderedRoute, setRenderedRoute] = useState([]);
+
+  useEffect(() => {
+    if (!optimizedRoute || optimizedRoute.length === 0) {
+      setRenderedRoute([]);
+      return;
+    }
+    
+    setRenderedRoute([]);
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < optimizedRoute.length) {
+        setRenderedRoute(prev => [...prev, optimizedRoute[i]]);
+        i++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 500); // Add a new node to the line every 500ms
+    
+    return () => clearInterval(interval);
+  }, [optimizedRoute]);
 
   return (
     <div style={{ height }} className="relative w-full overflow-hidden bg-background">
@@ -83,13 +104,12 @@ export default function MapView({ complaints, height = '400px', activeComplaintI
             </Popup>
           </Marker>
         ))}
-        {optimizedRoute && optimizedRoute.length > 1 && (
+        {renderedRoute.length > 1 && (
           <Polyline 
-            positions={optimizedRoute} 
+            positions={renderedRoute} 
             color="hsl(var(--primary))" 
             weight={4} 
-            dashArray="10, 10" 
-            className="animate-pulse"
+            className="route-path"
           />
         )}
       </MapContainer>

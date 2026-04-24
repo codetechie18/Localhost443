@@ -36,6 +36,7 @@ export default function ReportIssue() {
   const [restoredDraft, setRestoredDraft] = useState(Boolean(initialDraft));
   const [uploadResetKey, setUploadResetKey] = useState(0);
   const [aiFilled, setAiFilled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const firstRenderRef = useRef(true);
 
   useEffect(() => {
@@ -76,14 +77,62 @@ export default function ReportIssue() {
   };
 
   const handleAiAnalysis = (aiData) => {
-    setForm(prev => ({
-      ...prev,
-      title: aiData.title,
-      description: aiData.description,
-      category: aiData.category
-    }));
     setAiFilled(true);
-    setTimeout(() => setAiFilled(false), 5000); // glowing effect goes away after 5s
+    setForm(prev => ({ ...prev, category: aiData.category, title: '', description: '' }));
+    
+    let i = 0;
+    const titleText = aiData.title;
+    const descText = aiData.description;
+    
+    const interval = setInterval(() => {
+      if (i <= Math.max(titleText.length, descText.length)) {
+        setForm(prev => ({
+          ...prev,
+          title: titleText.substring(0, i),
+          description: descText.substring(0, i)
+        }));
+        i++;
+      } else {
+        clearInterval(interval);
+        setTimeout(() => setAiFilled(false), 5000);
+      }
+    }, 20); // Fast typewriter speed
+  };
+
+  const handleVoiceInput = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice recognition is not supported in this browser.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      const lowerT = transcript.toLowerCase();
+      
+      let detectedCategory = "";
+      if (lowerT.includes("pothole") || lowerT.includes("road")) detectedCategory = "Roads";
+      else if (lowerT.includes("garbage") || lowerT.includes("waste")) detectedCategory = "Waste Management";
+      else if (lowerT.includes("water") || lowerT.includes("leak")) detectedCategory = "Water Supply";
+      else if (lowerT.includes("light")) detectedCategory = "Streetlights";
+
+      setForm(prev => ({
+        ...prev,
+        description: (prev.description ? prev.description + " " : "") + transcript,
+        category: detectedCategory || prev.category,
+        title: prev.title || "Voice Reported Issue"
+      }));
+    };
+    
+    recognition.start();
   };
 
   const handleSubmit = (e) => {
@@ -129,8 +178,8 @@ export default function ReportIssue() {
           ) : (
             <form onSubmit={handleSubmit} className="bg-card rounded-xl card-shadow p-6 space-y-5 animate-fade-in relative">
               {aiFilled && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg animate-bounce z-10">
-                  <span className="text-sm">✨</span> Auto-Filled by Civic AI
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white px-5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.5)] animate-pulse z-10 border border-white/20">
+                  <span className="text-sm animate-spin-slow">✨</span> Generating Civic AI Report...
                 </div>
               )}
               <div className="rounded-2xl border border-border bg-background p-4">
@@ -183,7 +232,16 @@ export default function ReportIssue() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Description</label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-medium text-muted-foreground block">Description</label>
+                  <button 
+                    type="button" 
+                    onClick={handleVoiceInput}
+                    className={`text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 transition-all ${isListening ? 'bg-destructive text-destructive-foreground animate-pulse' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}
+                  >
+                    {isListening ? '🎙️ Listening...' : '🎙️ Dictate with AI'}
+                  </button>
+                </div>
                 <textarea
                   value={form.description}
                   onChange={(e) => updateForm('description', e.target.value)}
