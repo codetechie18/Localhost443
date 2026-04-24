@@ -31,6 +31,16 @@ export default {
         primary: "hsl(var(--primary))",
         secondary: "hsl(var(--secondary))",
       },
+      keyframes: {
+        scan: {
+          '0%': { transform: 'translateY(-100%)' },
+          '50%': { transform: 'translateY(190px)' }, // roughly height of container
+          '100%': { transform: 'translateY(-100%)' },
+        }
+      },
+      animation: {
+        scan: 'scan 2s ease-in-out infinite',
+      }
     },
   },
   plugins: [],

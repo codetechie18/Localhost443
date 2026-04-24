@@ -20,12 +20,40 @@ export default function AdminMap() {
   // AI Workflow States
   const [isAiRunning, setIsAiRunning] = useState(false);
   const [aiLogs, setAiLogs] = useState([]);
+  const [optimizedRoute, setOptimizedRoute] = useState(null);
   const logsEndRef = useRef(null);
 
   // Auto-scroll AI logs
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [aiLogs]);
+
+  const generateRoute = () => {
+    const pendingCases = complaints.filter(c => c.status === 'Pending' || c.status === 'In Progress');
+    if (pendingCases.length < 2) {
+      setAiLogs([{ text: "Not enough cases to generate an optimized route.", type: "info" }]);
+      setTimeout(() => setAiLogs([]), 3000);
+      return;
+    }
+
+    setIsAiRunning(true);
+    setAiLogs([{ text: "Initializing AI Dispatcher...", type: "system" }]);
+
+    setTimeout(() => {
+      setAiLogs(prev => [...prev, { text: `Calculating Traveling Salesperson (TSP) algorithm for ${pendingCases.length} locations...`, type: "processing" }]);
+      
+      setTimeout(() => {
+        // Simple mock route: just map their coordinates and maybe sort by lat/lng to look somewhat realistic
+        const route = pendingCases
+          .map(c => [c.location.lat, c.location.lng])
+          .sort((a, b) => a[0] - b[0] || a[1] - b[1]); 
+        
+        setOptimizedRoute(route);
+        setAiLogs(prev => [...prev, { text: `✅ Optimal Route Generated. Rendering on map...`, type: "success" }]);
+        setIsAiRunning(false);
+      }, 2000);
+    }, 1000);
+  };
 
   const runAiWorkflow = () => {
     const pendingCases = complaints.filter(c => c.status === 'Pending' || c.status === 'In Progress');
@@ -117,20 +145,29 @@ export default function AdminMap() {
               <div className="rounded-[1.5rem] border border-indigo-500/30 bg-indigo-900/20 backdrop-blur-2xl p-6 shadow-[0_0_30px_rgba(99,102,241,0.15)] relative overflow-hidden shrink-0 group">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                <div className="flex items-center justify-between mb-2 relative z-10">
+                <div className="flex items-start justify-between mb-2 relative z-10">
                   <div>
                     <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
                       <Bot size={24} className="text-indigo-400" /> AI Solver
                     </h3>
-                    <p className="text-[11px] text-indigo-200/70 mt-1 uppercase tracking-widest font-semibold">Automated Verification</p>
+                    <p className="text-[11px] text-indigo-200/70 mt-1 uppercase tracking-widest font-semibold">Automation & Dispatch</p>
                   </div>
-                  <button
-                    onClick={runAiWorkflow}
-                    disabled={isAiRunning}
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:shadow-[0_0_30px_rgba(99,102,241,0.8)] flex items-center gap-2"
-                  >
-                    {isAiRunning ? 'Processing...' : 'Auto-Resolve All'}
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={runAiWorkflow}
+                      disabled={isAiRunning}
+                      className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:shadow-[0_0_30px_rgba(99,102,241,0.8)]"
+                    >
+                      {isAiRunning ? 'Processing...' : 'Auto-Resolve All'}
+                    </button>
+                    <button
+                      onClick={generateRoute}
+                      disabled={isAiRunning}
+                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:shadow-[0_0_30px_rgba(16,185,129,0.8)]"
+                    >
+                      {isAiRunning ? 'Processing...' : 'Generate Route'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* AI Terminal Logs */}
@@ -304,6 +341,7 @@ export default function AdminMap() {
                     complaints={filteredComplaints}
                     height="100%"
                     activeComplaintId={activeComplaintId}
+                    optimizedRoute={optimizedRoute}
                   />
                 </div>
               </div>

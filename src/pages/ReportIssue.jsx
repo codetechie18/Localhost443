@@ -35,6 +35,7 @@ export default function ReportIssue() {
   const [lastSavedAt, setLastSavedAt] = useState(initialDraft?.updatedAt ?? null);
   const [restoredDraft, setRestoredDraft] = useState(Boolean(initialDraft));
   const [uploadResetKey, setUploadResetKey] = useState(0);
+  const [aiFilled, setAiFilled] = useState(false);
   const firstRenderRef = useRef(true);
 
   useEffect(() => {
@@ -70,7 +71,19 @@ export default function ReportIssue() {
     clearReportDraft();
     setLastSavedAt(null);
     setRestoredDraft(false);
+    setAiFilled(false);
     resetForm();
+  };
+
+  const handleAiAnalysis = (aiData) => {
+    setForm(prev => ({
+      ...prev,
+      title: aiData.title,
+      description: aiData.description,
+      category: aiData.category
+    }));
+    setAiFilled(true);
+    setTimeout(() => setAiFilled(false), 5000); // glowing effect goes away after 5s
   };
 
   const handleSubmit = (e) => {
@@ -114,7 +127,12 @@ export default function ReportIssue() {
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="bg-card rounded-xl card-shadow p-6 space-y-5 animate-fade-in">
+            <form onSubmit={handleSubmit} className="bg-card rounded-xl card-shadow p-6 space-y-5 animate-fade-in relative">
+              {aiFilled && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg animate-bounce z-10">
+                  <span className="text-sm">✨</span> Auto-Filled by Civic AI
+                </div>
+              )}
               <div className="rounded-2xl border border-border bg-background p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
@@ -149,6 +167,7 @@ export default function ReportIssue() {
               <UploadBox
                 resetKey={uploadResetKey}
                 onFileSelect={(url) => updateForm('image', url)}
+                onAiAnalysis={handleAiAnalysis}
               />
 
               <div>
@@ -159,7 +178,7 @@ export default function ReportIssue() {
                   onChange={(e) => updateForm('title', e.target.value)}
                   required
                   placeholder="Brief title of the issue"
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className={`w-full px-4 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${aiFilled ? 'border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)] ring-1 ring-primary' : 'border-border'}`}
                 />
               </div>
 
@@ -170,7 +189,7 @@ export default function ReportIssue() {
                   onChange={(e) => updateForm('description', e.target.value)}
                   required
                   placeholder="Describe the issue in detail..."
-                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-sm resize-none h-28 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className={`w-full px-4 py-2.5 rounded-lg border bg-background text-sm resize-none h-28 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${aiFilled ? 'border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)] ring-1 ring-primary' : 'border-border'}`}
                 />
               </div>
 
@@ -181,7 +200,7 @@ export default function ReportIssue() {
                     value={form.category}
                     onChange={(e) => updateForm('category', e.target.value)}
                     required
-                    className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className={`w-full px-4 py-2.5 rounded-lg border bg-background text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${aiFilled ? 'border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)] ring-1 ring-primary' : 'border-border'}`}
                   >
                     <option value="">Select category</option>
                     {CATEGORIES.map((category) => (

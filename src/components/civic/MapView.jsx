@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import StatusBadge from './StatusBadge';
 import { useTheme } from '../../context/ThemeContext';
@@ -36,7 +36,7 @@ function MapController({ highlightedComplaint }) {
   return null;
 }
 
-export default function MapView({ complaints, height = '400px', activeComplaintId }) {
+export default function MapView({ complaints, height = '400px', activeComplaintId, optimizedRoute }) {
   const activeComplaint = complaints.find((complaint) => complaint.id === activeComplaintId);
   const { theme } = useTheme();
 
@@ -83,6 +83,15 @@ export default function MapView({ complaints, height = '400px', activeComplaintI
             </Popup>
           </Marker>
         ))}
+        {optimizedRoute && optimizedRoute.length > 1 && (
+          <Polyline 
+            positions={optimizedRoute} 
+            color="hsl(var(--primary))" 
+            weight={4} 
+            dashArray="10, 10" 
+            className="animate-pulse"
+          />
+        )}
       </MapContainer>
     </div>
   );
